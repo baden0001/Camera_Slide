@@ -51,15 +51,13 @@
 //Sense potentiometer location
 // ranges 0-1023
 int sensorPinPan = A0;
-int sensorPinRotate = A1;
+int sensorPinRotate = A0;
 
 byte directionPinPan = 9;
 byte stepPinPan = 8;
-byte panDirection = 7;
 
 byte directionPinRotate = 11;
 byte stepPinRotate = 10;
-byte rotateDirection = 6;
 
 byte led1PinPan = 2;
 byte led2PinPan = 3;
@@ -112,10 +110,7 @@ void setup() {
      
      pinMode(led1PinRotate, OUTPUT);
      pinMode(led2PinRotate, OUTPUT);
-     pinMode(led3PinRotate, OUTPUT);
-     
-     pinMode(panDirection, INPUT_PULLUP);
-     pinMode(rotateDirection, INPUT_PULLUP);   
+     pinMode(led3PinRotate, OUTPUT); 
 
      Serial.begin(9600);
      
@@ -176,7 +171,8 @@ void setPanStageSpeed() {
 }
 
 void scaleRotateSpeed() {
-    scaledSpeedRotate = map(analogRead(sensorPinRotate), 0, 1023, minStepSpeedRotate, maxStepSpeedRotate) ;
+    //scaledSpeedRotate = map(analogRead(sensorPinRotate), 0, 1023, minStepSpeedRotate, maxStepSpeedRotate) ;
+    scaledSpeedRotate = scaledSpeedPan ;
 
 }
 
