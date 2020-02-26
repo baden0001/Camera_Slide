@@ -51,7 +51,7 @@
 //Sense potentiometer location
 // ranges 0-1023
 int sensorPinPan = A0;
-int sensorPinRotate = A0;
+//int sensorPinRotate = A0;
 
 byte directionPinPan = 9;
 byte stepPinPan = 8;
@@ -81,7 +81,11 @@ bool dirPan = true;
 bool dirRotate = true;
 
 unsigned long maxCountPan = 65535;
-unsigned long maxCountRotate = 65535;
+//Set number of steps that camera is to 
+// rotate in a single pass
+//This is spread out over the entire 
+// linear rail movement
+unsigned long maxCountRotate = 7000;
 
 unsigned long curMicros;
 unsigned long prevStepMicrosPan = 0;
@@ -117,7 +121,7 @@ void setup() {
 }
 
 void loop() {
-   
+     
     curMicros = micros();
     readInputs();
     actOnInputs();
@@ -125,22 +129,17 @@ void loop() {
 }
 
 void readInputs() {   
-    //scalePanSpeed();
-    //scaleRotateSpeed();
     stagePan = stageSelect(led1PinPan, led2PinPan, led3PinPan, sensorPinPan);
-    //Serial.println(stagePan);
     setPanStageSpeed();
-    //Serial.println(scaledSpeedPan);
-    stageRotate = stageSelect(led1PinRotate, led2PinRotate, led3PinRotate, sensorPinRotate);
-    setRotateStageSpeed();
+
+    //Caculate the time between rotational axis pulses to allow for the rotational axis max count to
+    // be met when the linear axis max count is reached.
+    scaledSpeedRotate = (maxCountPan * scaledSpeedPan) / maxCountRotate ;
 
 }
 
 void actOnInputs() {
 
-    //Copy direction state over to stepper driver
-    //digitalWrite(directionPinPan, digitalRead(panDirection));
-    //digitalWrite(directionPinRotate, digitalRead(rotateDirection));
     checkDirectionPan();
     checkDirectionRotate();
     singleStepPan();
@@ -167,30 +166,6 @@ void setPanStageSpeed() {
     }
     if (stagePan == 5) {
         scaledSpeedPan = 350;
-    }
-}
-
-void scaleRotateSpeed() {
-    //scaledSpeedRotate = map(analogRead(sensorPinRotate), 0, 1023, minStepSpeedRotate, maxStepSpeedRotate) ;
-    scaledSpeedRotate = scaledSpeedPan ;
-
-}
-
-void setRotateStageSpeed() {
-    if (stageRotate == 1) {
-        scaledSpeedRotate = 55000;
-    }
-    if (stageRotate == 2) {
-        scaledSpeedRotate = 27500;
-    }
-    if (stageRotate == 3) {
-        scaledSpeedRotate = 13700;
-    }
-    if (stageRotate == 4) {
-        scaledSpeedRotate = 4600;
-    }
-    if (stageRotate == 5) {
-        scaledSpeedRotate = 350;
     }
 }
 
@@ -285,8 +260,5 @@ int stageSelect(byte led1, byte led2, byte led3, byte analogPin) {
         x = 5;
         
     }
-    //Serial.println(x);
-    //Serial.println(analogValue);
-    //delay(1000);
     return x;
 }
