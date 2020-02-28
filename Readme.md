@@ -1,2 +1,1 @@
-Master branch is what I started with.
-Development branch will be used to shrink the code and add new functionality.
+Program that allows two axis (1 linear and 1 rotational) to be controlled for camera slide.
