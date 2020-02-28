@@ -81,11 +81,14 @@ bool dirPan = true;
 bool dirRotate = true;
 
 unsigned long maxCountPan = 65535;
-//Set number of steps that camera is to 
-// rotate in a single pass
-//This is spread out over the entire 
-// linear rail movement
-unsigned long maxCountRotate = 7000;
+/* 15 teeth on motor
+ 72 teeth on camera mount
+ 1.8 degrees/step
+  200 full steps/revolution of motor
+  200 * 72 / 15 = 960 full steps per camera revolution
+  960 * 32 microsteps/step = 30720 steps/camera revolution
+*/
+unsigned long maxCountRotate = 30720;
 
 unsigned long curMicros;
 unsigned long prevStepMicrosPan = 0;
@@ -144,11 +147,6 @@ void actOnInputs() {
     checkDirectionRotate();
     singleStepPan();
     singleStepRotate();
-}
-
-void scalePanSpeed() {
-    scaledSpeedPan = map(analogRead(sensorPinPan), 0, 1023, minStepSpeedPan, maxStepSpeedPan);
-  
 }
 
 void setPanStageSpeed() {
