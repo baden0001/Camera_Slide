@@ -71,7 +71,7 @@ byte stageRotate = 1;
 
 byte debug = 0;
 
-//Total steps in rail approx. 65535
+//Total steps 
 unsigned long totalCountPan = 0;
 unsigned long totalCountRotate = 0;
 
@@ -88,17 +88,11 @@ unsigned long maxCountPan = 65535;
   200 * 72 / 15 = 960 full steps per camera revolution
   960 * 32 microsteps/step = 30720 steps/camera revolution
 */
-unsigned long maxCountRotate = 30720;
+unsigned long maxCountRotate = 15000;
 
 unsigned long curMicros;
 unsigned long prevStepMicrosPan = 0;
 unsigned long prevStepMicrosRotate = 0;
-
-unsigned long minStepSpeedPan =  350;
-unsigned long minStepSpeedRotate = 350;
-
-unsigned long maxStepSpeedPan = 55000;
-unsigned long maxStepSpeedRotate = 55000;
 
 unsigned long scaledSpeedPan = 0;
 unsigned long scaledSpeedRotate = 0;
@@ -143,10 +137,11 @@ void readInputs() {
 
 void actOnInputs() {
 
-    checkDirectionPan();
-    checkDirectionRotate();
-    singleStepPan();
-    singleStepRotate();
+    dirPan = checkDirection(dirPan, totalCountPan, maxCountPan, directionPinPan) ;
+    dirRotate = checkDirection(dirRotate, totalCountRotate, maxCountRotate, directionPinRotate) ;
+    singleStep(prevStepMicrosPan, totalCountPan, scaledSpeedPan, curMicros, stepPinPan, dirPan) ;
+    singleStep(prevStepMicrosRotate, totalCountRotate, scaledSpeedRotate, curMicros, stepPinRotate, dirRotate) ;
+
 }
 
 void setPanStageSpeed() {
@@ -167,53 +162,29 @@ void setPanStageSpeed() {
     }
 }
 
-void checkDirectionPan() {
-    if (dirPan && (totalCountPan >= maxCountPan)) {
-        dirPan = false;
+bool checkDirection(bool _dir, unsigned long _totalCount, unsigned long _maxCount, byte _pin) {
+    if (_dir && (_totalCount >= _maxCount)) {
+        _dir = false;
     }
 
-    if (!dirPan && (totalCountPan <= 0)) {
-        dirPan = true;
+    if (!_dir && (_totalCount <= 0)) {
+        _dir = true;
     }
-    digitalWrite(directionPinPan, dirPan);
+    digitalWrite(_pin, _dir);
+    return _dir ;
 }
 
-void checkDirectionRotate() {
-    if (dirRotate && (totalCountRotate >= maxCountRotate)) {
-        dirRotate = false;
-    }
-
-    if (!dirRotate && (totalCountRotate <= 0)) {
-        dirRotate = true;
-    }
-    digitalWrite(directionPinRotate, dirRotate);
-
-}
-
-void singleStepPan() {
-    if (curMicros - prevStepMicrosPan >= scaledSpeedPan) {
-        prevStepMicrosPan = curMicros;
-        digitalWrite(stepPinPan, HIGH);
-        digitalWrite(stepPinPan, LOW);
-        if (!dirPan && (totalCountPan >= 0)) {
-            totalCountPan -= 1;
+void singleStep(unsigned long& _prevStepMicros, unsigned long& _totalCount, unsigned long _scaledSpeed,
+    unsigned long _curMicros, byte _stepPin, bool _dir) {
+    if (_curMicros - _prevStepMicros >= _scaledSpeed) {
+        _prevStepMicros = _curMicros;
+        digitalWrite(_stepPin, HIGH);
+        digitalWrite(_stepPin, LOW);
+        if (!_dir && (_totalCount >= 0)) {
+            _totalCount -= 1;
         }
-        if (dirPan) {
-            totalCountPan += 1;
-        }
-    }
-}
-
-void singleStepRotate() {
-    if (curMicros - prevStepMicrosRotate >= scaledSpeedRotate) {
-        prevStepMicrosRotate = curMicros;
-        digitalWrite(stepPinRotate, HIGH);
-        digitalWrite(stepPinRotate, LOW);
-        if (!dirRotate && (totalCountRotate >= 0)) {
-            totalCountRotate -= 1;
-        }
-        if (dirRotate) {
-            totalCountRotate += 1;
+        if (_dir) {
+            _totalCount += 1;
         }
     }
 }
