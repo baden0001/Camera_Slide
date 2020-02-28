@@ -62,7 +62,7 @@ byte stepPinRotate = 10;
 byte led1PinPan = 2;
 byte led2PinPan = 3;
 byte led3PinPan = 4;
-byte stagePan = 1;
+byte stageSelected = 1;
 
 byte led1PinRotate = 5;
 byte led2PinRotate = 6;
@@ -88,7 +88,7 @@ unsigned long maxCountPan = 65535;
   200 * 72 / 15 = 960 full steps per camera revolution
   960 * 32 microsteps/step = 30720 steps/camera revolution
 */
-unsigned long maxCountRotate = 15000;
+unsigned long maxCountRotate = 30720;
 
 unsigned long curMicros;
 unsigned long prevStepMicrosPan = 0;
@@ -126,8 +126,8 @@ void loop() {
 }
 
 void readInputs() {   
-    stagePan = stageSelect(led1PinPan, led2PinPan, led3PinPan, sensorPinPan);
-    setPanStageSpeed();
+    stageSelect(stageSelected, led1PinPan, led2PinPan, led3PinPan, sensorPinPan) ;
+    setStageSpeed(scaledSpeedPan, stageSelected) ;
 
     //Caculate the time between rotational axis pulses to allow for the rotational axis max count to
     // be met when the linear axis max count is reached.
@@ -144,21 +144,21 @@ void actOnInputs() {
 
 }
 
-void setPanStageSpeed() {
-    if (stagePan == 1) {
-        scaledSpeedPan = 55000;
+void setStageSpeed(unsigned long& _scaledSpeed, byte _stageSelected) {
+    if (_stageSelected == 1) {
+        _scaledSpeed = 55000;
     }
-    if (stagePan == 2) {
-        scaledSpeedPan = 27500;
+    if (_stageSelected == 2) {
+        _scaledSpeed = 27500;
     }
-    if (stagePan == 3) {
-        scaledSpeedPan = 13700;
+    if (_stageSelected == 3) {
+        _scaledSpeed = 13700;
     }
-    if (stagePan == 4) {
-        scaledSpeedPan = 4600;
+    if (_stageSelected == 4) {
+        _scaledSpeed = 4600;
     }
-    if (stagePan == 5) {
-        scaledSpeedPan = 350;
+    if (_stageSelected == 5) {
+        _scaledSpeed = 350;
     }
 }
 
@@ -189,45 +189,43 @@ void singleStep(unsigned long& _prevStepMicros, unsigned long& _totalCount, unsi
     }
 }
 
-int stageSelect(byte led1, byte led2, byte led3, byte analogPin) {
+void stageSelect(byte& _stageSelected, byte _led1, byte _led2, byte _led3, byte _analogPin) {
     //Detect the stage of the analog pot
-    int analogValue = analogRead(analogPin);
-    int x = 0;
-    if ((analogValue <= 205)) {
+    int _analogValue = analogRead(_analogPin);
+    if ((_analogValue <= 205)) {
         //Stage 1
-        digitalWrite(led1, LOW);
-        digitalWrite(led2, LOW);
-        digitalWrite(led3, LOW);
-        x = 1;
+        digitalWrite(_led1, LOW);
+        digitalWrite(_led2, LOW);
+        digitalWrite(_led3, LOW);
+        _stageSelected = 1;
         
-    } else if ((analogValue > 205) && (analogValue <= 410)) {
+    } else if ((_analogValue > 205) && (_analogValue <= 410)) {
         //Stage 2
-        digitalWrite(led1, HIGH);
-        digitalWrite(led2, LOW);
-        digitalWrite(led3, LOW);
-        x = 2;
+        digitalWrite(_led1, HIGH);
+        digitalWrite(_led2, LOW);
+        digitalWrite(_led3, LOW);
+        _stageSelected = 2;
         
-    } else if ((analogValue > 410) && (analogValue <= 615)) {
+    } else if ((_analogValue > 410) && (_analogValue <= 615)) {
         //Stage 3  
-        digitalWrite(led1, LOW);
-        digitalWrite(led2, HIGH);
-        digitalWrite(led3, LOW); 
-        x = 3;
+        digitalWrite(_led1, LOW);
+        digitalWrite(_led2, HIGH);
+        digitalWrite(_led3, LOW); 
+        _stageSelected = 3;
            
-    } else if ((analogValue > 615) && (analogValue <= 820)) {
+    } else if ((_analogValue > 615) && (_analogValue <= 820)) {
         //Stage 4
-        digitalWrite(led1, LOW);
-        digitalWrite(led2, LOW);
-        digitalWrite(led3, HIGH);
-        x = 4;
+        digitalWrite(_led1, LOW);
+        digitalWrite(_led2, LOW);
+        digitalWrite(_led3, HIGH);
+        _stageSelected = 4;
         
-    } else if (analogValue > 820) {
+    } else if (_analogValue > 820) {
         //Stage 5
-        digitalWrite(led1, HIGH);
-        digitalWrite(led2, HIGH);
-        digitalWrite(led3, HIGH);
-        x = 5;
+        digitalWrite(_led1, HIGH);
+        digitalWrite(_led2, HIGH);
+        digitalWrite(_led3, HIGH);
+        _stageSelected = 5;
         
     }
-    return x;
 }
